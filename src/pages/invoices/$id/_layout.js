@@ -9,6 +9,7 @@ import {
   EyeOutlined,
   FilePdfOutlined,
   SaveOutlined,
+  CopyOutlined,
 } from '@ant-design/icons';
 import { t, Trans } from '@lingui/macro';
 import { withI18n } from '@lingui/react';
@@ -26,6 +27,7 @@ import { required } from '../../../components/forms/validators';
 import StateTag from '../../../components/invoices/state-tag';
 import LineItems from '../../../components/invoices/line-items';
 import FooterToolbar from '../../../components/layout/footer-toolbar';
+import { Fragment } from 'react';
 
 const totals = (lineItems, taxRates) => {
   let subTotal = currency(0, { separator: '' });
@@ -117,6 +119,17 @@ class InvoiceForm extends Component {
             _rev,
           },
         });
+      },
+    });
+  };
+
+  duplicate = (_id, _rev) => {
+    this.props.dispatch({
+      type: 'invoices/duplicate',
+      data: {
+        _id,
+        _rev,
+        number: nextInvoiceNumber(this.props.invoices),
       },
     });
   };
@@ -316,12 +329,17 @@ class InvoiceForm extends Component {
             extra={
               <div>
                 {!this.isNew() && (
-                  <Button
-                    type="dashed"
-                    onClick={() => this.deleteConfirm(invoice._id, invoice._rev)}
-                  >
-                    <DeleteOutlined /> <Trans>Delete</Trans>
-                  </Button>
+                  <Fragment>
+                    <Button
+                      type="dashed"
+                      onClick={() => this.deleteConfirm(invoice._id, invoice._rev)}
+                    >
+                      <DeleteOutlined /> <Trans>Delete</Trans>
+                    </Button>
+                    <Button type="dashed" onClick={() => this.duplicate(invoice._id, invoice._rev)}>
+                      <CopyOutlined /> <Trans>Duplicate</Trans>
+                    </Button>
+                  </Fragment>
                 )}
               </div>
             }

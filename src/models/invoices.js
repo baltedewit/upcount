@@ -74,6 +74,19 @@ export default {
         message.error(i18n._(t`Error deleting invoice!`), 5);
       }
     },
+
+    *duplicate({ data }, { put, call }) {
+      try {
+        const original = yield call(invoicesService.details, data._id);
+        original.number = data.number;
+        delete original._id;
+        delete original._rev;
+        yield call(invoicesService.save, original);
+        yield put(push('/invoices'));
+      } catch (e) {
+        message.error(i18n._(t`Error duplicating invoice!`), 5);
+      }
+    },
   },
 
   reducers: {
