@@ -388,10 +388,16 @@ class Invoice extends Component {
                       IBAN: {get(organization, 'iban')}
                     </span>
                   ) : null}
-                  {has(organization, 'iban') ? (
+                  {has(organization, 'bic') ? (
                     <span>
                       <br />
-                      SWIFT: {get(organization, 'swift')}
+                      BIC: {get(organization, 'bic')}
+                    </span>
+                  ) : null}
+                  {has(organization, 'bic') ? (
+                    <span>
+                      <br />
+                      Intermediary BIC: {get(organization, 'intermediary_bic')}
                     </span>
                   ) : null}
                 </span>
