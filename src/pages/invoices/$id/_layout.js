@@ -48,6 +48,16 @@ const totals = (lineItems, taxRates) => {
   return { subTotal, taxTotal, total };
 };
 
+const nextInvoiceNumber = invoices => {
+  let highest = 1;
+
+  for (const [id, invoice] of Object.entries(invoices.items)) {
+    if (Number(invoice.number) > highest) highest = Number(invoice.number);
+  }
+
+  return highest + 1;
+};
+
 class InvoiceForm extends Component {
   componentDidMount() {
     if (!this.isNew()) {
@@ -365,6 +375,7 @@ export default withI18n()(
         taxRates: state.taxRates,
         lineItems: selector(state, 'lineItems'),
         initialValues: {
+          number: nextInvoiceNumber(state.invoices),
           currency: get(
             state.organizations.items,
             [localStorage.getItem('organization'), 'currency'],
