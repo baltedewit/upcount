@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { Component, Fragment } from 'react';
 import { compose } from 'redux';
 import { connect } from 'dva';
 import { Spin, Rate } from 'antd';
