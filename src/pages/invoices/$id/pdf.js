@@ -9,11 +9,26 @@ import styled from 'styled-components';
 import withRouter from 'umi/withRouter';
 
 const Page = styled.div`
-  @import url('https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700&subset=latin-ext');
-  font-family: 'Open Sans', sans-serif;
-
   @import url('https://fonts.googleapis.com/css2?family=Aleo&family=Montserrat:wght@300&family=Mr+Dafoe&display=swap');
   font-family: 'Aleo', serif;
+
+  @media print {
+    #invoice {
+      font-family: 'Aleo', serif;
+
+      .header {
+        font-family: 'Mr Dafoe', cursive;
+      }
+
+      td {
+        background-color: #f4f4f4 !important;
+      }
+
+      .detail-item label {
+        font-family: 'Montserrat', sans-serif;
+      }
+    }
+  }
 
   .line-break {
     white-space: pre-line;
@@ -176,7 +191,7 @@ class Invoice extends Component {
     return (
       <Page id="bootstrapped">
         {client && organization && invoice ? (
-          <div className="invoice">
+          <div className="invoice" id="invoice">
             <div className="header">Balte.nl</div>
             <div className="content">
               <div id="lines" className="row">
@@ -371,6 +386,12 @@ class Invoice extends Component {
                     <span>
                       <br />
                       IBAN: {get(organization, 'iban')}
+                    </span>
+                  ) : null}
+                  {has(organization, 'iban') ? (
+                    <span>
+                      <br />
+                      SWIFT: {get(organization, 'swift')}
                     </span>
                   ) : null}
                 </span>

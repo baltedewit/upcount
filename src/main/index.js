@@ -98,6 +98,8 @@ ipcMain.on('readyToPrint', (event, filename) => {
   printerWindow.webContents
     .printToPDF({
       pageSize: 'A4',
+      printBackground: true,
+      marginsType: 1,
     })
     .then(data => {
       dialog
