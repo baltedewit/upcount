@@ -1,7 +1,7 @@
 import { Component } from 'react';
 import { compose } from 'redux';
 import { connect } from 'dva';
-import { Spin } from 'antd';
+import { Spin, Rate } from 'antd';
 import { Trans, NumberFormat } from '@lingui/macro';
 import { get, has, head } from 'lodash';
 
@@ -12,40 +12,90 @@ const Page = styled.div`
   @import url('https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700&subset=latin-ext');
   font-family: 'Open Sans', sans-serif;
 
+  @import url('https://fonts.googleapis.com/css2?family=Aleo&family=Montserrat:wght@300&family=Mr+Dafoe&display=swap');
+  font-family: 'Aleo', serif;
+
   .line-break {
     white-space: pre-line;
   }
 
-  #client,
-  #organization {
-    margin-top: 20px;
-    strong {
-      display: inline-block;
-      padding-bottom: 10px;
-    }
+  .invoice {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    color: black;
+    background-color: #f4f4f4;
   }
 
-  #dates {
-    margin-top: 20px;
+  .header {
+    font-family: 'Mr Dafoe', cursive;
+    width: 100%;
+    text-align: center;
+    font-size: 7rem;
 
-    tbody {
-      tr {
-        td {
-          padding-bottom: 0;
-        }
-        td:first-of-type {
-          padding-left: 0;
-        }
-      }
-    }
+    border-bottom: solid black 8px;
+  }
+
+  .content {
+    flex-grow: 2;
+    width: 100%;
+  }
+
+  .details {
+    width: 100%;
+    padding: 0 3rem 1rem 3rem;
+  }
+  .details .left,
+  .details .right {
+    display: inline-block;
+    width: 50%;
+  }
+  .details .right {
+    text-align: right;
+  }
+
+  .detail-item label {
+    display: block !important;
+    margin-bottom: 0 !important;
+
+    font-family: 'Montserrat', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  .notes {
+    width: 100%;
+    padding: 0 3rem 1rem 3rem;
+    font-style: italic;
+  }
+
+  .footer {
+    width: 100%;
+    text-align: center;
+    padding: 1rem;
+
+    background-color: black;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  .footer a {
+    color: white !important;
   }
 
   #lines {
-    margin-top: 40px;
+    width: 90%;
+    margin-left: 5%;
 
     table {
       td {
-        border-top: 3px solid #868686;
         &.min-width {
           width: 1%;
           white-space: nowrap;
@@ -53,27 +103,41 @@ const Page = styled.div`
         &.spaced {
           padding-left: 20px;
         }
+        border: 0;
       }
-    }
-  }
 
-  #notes {
-    margin-top: 40px;
-  }
+      tr {
+        border: 0;
+      }
 
-  #footer {
-    width: calc(100% - 48px);
-    position: absolute;
-    bottom: 24px;
-    border-top: 1px solid #000;
-    padding-top: 10px;
-    font-size: 11px;
+      thead {
+        font-family: 'Montserrat', sans-serif;
+        text-transform: uppercase;
+      }
 
-    @media print {
-      width: 100%;
-      position: fixed;
-      bottom: 0;
-      border-top: 1px solid #868686;
+      tfoot {
+        tr:first-of-type td {
+          padding-top: 1.75rem;
+        }
+        td {
+          padding: 0.25rem;
+        }
+        td.label {
+          font-family: 'Montserrat', sans-serif;
+          text-transform: uppercase;
+        }
+      }
+
+      thead::after,
+      tbody::after {
+        content: ' ';
+        height: 3px;
+        width: 21cm;
+        margin-left: -55px;
+        background-color: black;
+        display: block;
+        position: absolute;
+      }
     }
   }
 `;
@@ -103,7 +167,7 @@ class Invoice extends Component {
   }
 
   render() {
-    const { clients, organizations, invoices } = this.props;
+    const { clients, organizations, invoices, taxRates } = this.props;
     const organization = get(organizations.items, localStorage.getItem('organization'));
     const logo = get(organizations.logos, localStorage.getItem('organization'));
     const invoice = get(invoices.items, get(this.props, ['match', 'params', 'id']));
@@ -112,198 +176,38 @@ class Invoice extends Component {
     return (
       <Page id="bootstrapped">
         {client && organization && invoice ? (
-          <div className="container">
-            <div className="row">
-              <div className="col">
-                <h1 id="number">
-                  <Trans>Invoice</Trans> #{get(invoice, 'number')}
-                </h1>
-              </div>
-              <div className="col text-right">
-                {logo ? (
-                  <img id="logo" src={logo} alt="logo" style={{ maxWidth: 250, maxHeight: 250 }} />
-                ) : null}
-              </div>
-            </div>
-            <div className="row">
-              <div id="client" className="col line-break">
-                <strong>{get(client, 'name')}</strong>
-                {has(client, 'address') ? (
-                  <span>
-                    <br />
-                    {get(client, 'address')}
-                  </span>
-                ) : null}
-                {has(client, 'emails') ? (
-                  <span>
-                    <br />
-                    <a href={`mailto:${head(get(client, 'emails', []))}`}>
-                      {head(get(client, 'emails', []))}
-                    </a>
-                  </span>
-                ) : null}
-                {has(client, 'website') ? (
-                  <span>
-                    <br />
-                    <a href={get(client, 'website')}>{get(client, 'website')}</a>
-                  </span>
-                ) : null}
-              </div>
-              <div id="organization" className="col line-break text-right">
-                <strong>{get(organization, 'name')}</strong>
-                {has(organization, 'address') ? (
-                  <span>
-                    <br />
-                    {get(organization, 'address')}
-                  </span>
-                ) : null}
-                {has(organization, 'email') ? (
-                  <span>
-                    <br />
-                    <a href={`mailto:${get(organization, 'email')}`}>
-                      {get(organization, 'email')}
-                    </a>
-                  </span>
-                ) : null}
-                {has(organization, 'website') ? (
-                  <span>
-                    <br />
-                    <a href={get(organization, 'website')}>{get(organization, 'website')}</a>
-                  </span>
-                ) : null}
-              </div>
-            </div>
-            <div className="row">
-              <div className="col-4">
-                <table id="dates" className="table table-sm table-borderless">
-                  <tbody>
-                    <tr>
-                      <td>
-                        <Trans>Date</Trans>
-                      </td>
-                      <td>{invoice.date}</td>
-                    </tr>
-                    {invoice.due_date ? (
+          <div className="invoice">
+            <div className="header">Balte.nl</div>
+            <div className="content">
+              <div id="lines" className="row">
+                <div className="col">
+                  <table className="table">
+                    <thead>
                       <tr>
-                        <td>
-                          <Trans>Due date</Trans>
+                        <td className="border-top-0 min-width text-center">#</td>
+                        <td className="border-top-0">
+                          <Trans>Description</Trans>
                         </td>
-                        <td>{invoice.due_date}</td>
+                        <td className="border-top-0 min-width">
+                          <Trans>Quantity</Trans>
+                        </td>
+                        <td className="border-top-0 min-width spaced text-right">
+                          <Trans>Price</Trans>
+                        </td>
+                        <td className="border-top-0 min-width spaced text-right">
+                          <Trans>Sum</Trans>
+                        </td>
                       </tr>
-                    ) : null}
-                    {invoice.overdue_charge ? (
+                    </thead>
+                    <tfoot>
                       <tr>
-                        <td>
-                          <Trans>Overdue charge</Trans>
+                        <td colSpan="2" />
+                        <td colSpan="2" className="label">
+                          <Trans>Subtotal</Trans>
                         </td>
-                        <td>{invoice.overdue_charge}</td>
-                      </tr>
-                    ) : null}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <div id="lines" className="row">
-              <div className="col">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <td className="border-top-0 min-width text-center">#</td>
-                      <td className="border-top-0">
-                        <Trans>Description</Trans>
-                      </td>
-                      <td className="border-top-0 min-width">
-                        <Trans>Quantity</Trans>
-                      </td>
-                      <td className="border-top-0 min-width spaced text-right">
-                        <Trans>Price</Trans>
-                      </td>
-                      <td className="border-top-0 min-width spaced text-right">
-                        <Trans>Sum</Trans>
-                      </td>
-                    </tr>
-                  </thead>
-                  <tfoot>
-                    <tr>
-                      <td colSpan="2" />
-                      <td colSpan="2">
-                        <Trans>Subtotal</Trans>
-                      </td>
-                      <td className="text-right">
-                        <NumberFormat
-                          value={invoice.subTotal}
-                          format={{
-                            style: 'currency',
-                            currency: invoice.currency,
-                            minimumFractionDigits: get(organization, 'minimum_fraction_digits', 2),
-                          }}
-                        />
-                      </td>
-                    </tr>
-                    <tr>
-                      <td colSpan="2" className="border-top-0" />
-                      <td colSpan="2" className="border-top-0">
-                        <Trans>Tax</Trans>
-                      </td>
-                      <td className="text-right border-top-0">
-                        <NumberFormat
-                          value={invoice.taxTotal}
-                          format={{
-                            style: 'currency',
-                            currency: invoice.currency,
-                            minimumFractionDigits: get(organization, 'minimum_fraction_digits', 2),
-                          }}
-                        />
-                      </td>
-                    </tr>
-                    <tr>
-                      <td colSpan="2" className="border-top-0" />
-                      <td colSpan="2">
-                        <strong>
-                          <Trans>Total</Trans>
-                        </strong>
-                      </td>
-                      <td className="text-right">
-                        <strong>
+                        <td className="text-right">
                           <NumberFormat
-                            value={invoice.total}
-                            format={{
-                              style: 'currency',
-                              currency: invoice.currency,
-                              minimumFractionDigits: get(
-                                organization,
-                                'minimum_fraction_digits',
-                                2
-                              ),
-                            }}
-                          />
-                        </strong>
-                      </td>
-                    </tr>
-                  </tfoot>
-                  <tbody>
-                    {get(invoice, 'lineItems', []).map((lineItem, index) => (
-                      <tr key={`lineItem-${index}`}>
-                        <td>{index + 1}</td>
-                        <td>{lineItem.description}</td>
-                        <td className="min-width">{lineItem.quantity}</td>
-                        <td className="min-width spaced text-right">
-                          <NumberFormat
-                            value={lineItem.unitPrice}
-                            format={{
-                              style: 'currency',
-                              currency: invoice.currency,
-                              minimumFractionDigits: get(
-                                organization,
-                                'minimum_fraction_digits',
-                                2
-                              ),
-                            }}
-                          />
-                        </td>
-                        <td className="min-width spaced text-right">
-                          <NumberFormat
-                            value={lineItem.subtotal}
+                            value={invoice.subTotal}
                             format={{
                               style: 'currency',
                               currency: invoice.currency,
@@ -316,28 +220,175 @@ class Invoice extends Component {
                           />
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                      <tr>
+                        <td colSpan="2" className="border-top-0" />
+                        <td colSpan="2" className="border-top-0 label">
+                          <Trans>Tax</Trans>
+                        </td>
+                        <td className="text-right border-top-0">
+                          <NumberFormat
+                            value={invoice.taxTotal}
+                            format={{
+                              style: 'currency',
+                              currency: invoice.currency,
+                              minimumFractionDigits: get(
+                                organization,
+                                'minimum_fraction_digits',
+                                2
+                              ),
+                            }}
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td colSpan="2" className="border-top-0" />
+                        <td colSpan="2" className="label">
+                          <strong>
+                            <Trans>Total</Trans>
+                          </strong>
+                        </td>
+                        <td className="text-right">
+                          <strong>
+                            <NumberFormat
+                              value={invoice.total}
+                              format={{
+                                style: 'currency',
+                                currency: invoice.currency,
+                                minimumFractionDigits: get(
+                                  organization,
+                                  'minimum_fraction_digits',
+                                  2
+                                ),
+                              }}
+                            />
+                          </strong>
+                        </td>
+                      </tr>
+                    </tfoot>
+                    <tbody>
+                      {get(invoice, 'lineItems', []).map((lineItem, index) => (
+                        <tr key={`lineItem-${index}`}>
+                          <td>{index + 1}</td>
+                          <td>
+                            {lineItem.description}
+                            {taxRates.items[lineItem.taxRate] &&
+                              ` (${taxRates.items[lineItem.taxRate].percentage}% VAT)`}
+                          </td>
+                          <td className="min-width">{lineItem.quantity}</td>
+                          <td className="min-width spaced text-right">
+                            <NumberFormat
+                              value={lineItem.unitPrice}
+                              format={{
+                                style: 'currency',
+                                currency: invoice.currency,
+                                minimumFractionDigits: get(
+                                  organization,
+                                  'minimum_fraction_digits',
+                                  2
+                                ),
+                              }}
+                            />
+                          </td>
+                          <td className="min-width spaced text-right">
+                            <NumberFormat
+                              value={lineItem.subtotal}
+                              format={{
+                                style: 'currency',
+                                currency: invoice.currency,
+                                minimumFractionDigits: get(
+                                  organization,
+                                  'minimum_fraction_digits',
+                                  2
+                                ),
+                              }}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
-            <div id="notes" className="row">
-              <div className="col line-break">{invoice.customer_note}</div>
-            </div>
-            <div id="footer" className="row">
-              <div className="col">
-                {get(organization, 'bank')} {get(organization, 'iban')}
+            <div className="details">
+              <div className="left">
+                <span className="detail-item">
+                  <label>Invoice Number</label>#{('000' + get(invoice, 'number')).substr(-4)}
+                </span>
+                <br />
+                <br />
+                <span className="detail-item">
+                  <label>Date Issued</label>
+                  {new Date(invoice.date).toDateString()}
+                </span>
+                <br />
+                <span className="detail-item">
+                  <label>Due Date</label>
+                  {new Date(invoice.due_date).toDateString()}
+                </span>
+                <br />
+                <br />
+                <span className="detail-item line-break">
+                  <label>Issued to</label>
+                  <strong>{get(client, 'name')}</strong>
+                  {has(client, 'address') ? (
+                    <span>
+                      <br />
+                      {get(client, 'address')}
+                    </span>
+                  ) : null}
+                  {has(client, 'vatin') ? (
+                    <span>
+                      <br />
+                      VAT no: {get(client, 'vatin')}
+                    </span>
+                  ) : null}
+                </span>
               </div>
-              {organization.registration_number ? (
-                <div className="col text-center">
-                  <Trans>Reg. nr.</Trans> {get(organization, 'registration_number')}
-                </div>
-              ) : null}
-              {organization.vatin ? (
-                <div className="col text-right">
-                  <Trans>VATIN</Trans> {get(organization, 'vatin')}
-                </div>
-              ) : null}
+              <div className="right">
+                <span className="detail-item line-break">
+                  <label>Issued by</label>
+                  <strong>{get(organization, 'name')}</strong>
+                  {has(organization, 'address') ? (
+                    <span>
+                      <br />
+                      {get(organization, 'address')}
+                    </span>
+                  ) : null}
+                  {has(organization, 'vatin') ? (
+                    <span>
+                      <br />
+                      KVK No.: {get(organization, 'registration_number')}
+                    </span>
+                  ) : null}
+                  {has(organization, 'vatin') ? (
+                    <span>
+                      <br />
+                      VAT No.: {get(organization, 'vatin')}
+                    </span>
+                  ) : null}
+                  {has(organization, 'iban') ? (
+                    <span>
+                      <br />
+                      IBAN: {get(organization, 'iban')}
+                    </span>
+                  ) : null}
+                </span>
+              </div>
+            </div>
+            <div className="notes">{invoice.customer_note}</div>
+            <div className="footer">
+              <span>
+                <a href={get(organization, 'website')}>{get(organization, 'website')}</a>
+              </span>
+              {' • '}
+              <span>
+                <a href={get(organization, 'phone')}>{get(organization, 'phone')}</a>
+              </span>
+              {' • '}
+              <span>
+                <a href={get(organization, 'email')}>{get(organization, 'email')}</a>
+              </span>
             </div>
           </div>
         ) : (
@@ -357,6 +408,7 @@ export default withRouter(
         clients: state.clients,
         organizations: state.organizations,
         invoices: state.invoices,
+        taxRates: state.taxRates,
       };
     })(Invoice)
   )
