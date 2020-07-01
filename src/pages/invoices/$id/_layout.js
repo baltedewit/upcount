@@ -390,6 +390,14 @@ export default withI18n()(
           onSubmit: async (data, dispatch, props) => {
             const { lineItems, taxRates } = props;
             const { subTotal, taxTotal, total } = totals(lineItems, taxRates);
+            if (typeof data.date === 'object') {
+              // is momentjs obj
+              data.date = data.date.format('YYYY/MM/DD');
+            }
+            if (typeof data.due_date === 'object') {
+              // is momentjs obj
+              data.due_date = data.due_date.format('YYYY/MM/DD');
+            }
             return await dispatch({
               type: 'invoices/save',
               data: {
